@@ -1,6 +1,7 @@
 import sys
 import re
 from collections import Counter
+from urllib import request
 
 
 class ParseIpCommand:
@@ -60,14 +61,46 @@ class ParseIpCommand:
         for val in sorted_summary[:10]:
             print('%s - %s' % (val[0], val[1]))
 
+    def file_path_is_url(self):
+        """
+        Returns True if the filepath is a url
+        else False
+        """
+        return True if re.search(r'^https?://', self.file_path) else False
+
+    def get_file(self):
+        """
+        Opens the file and returns a file object
+        """
+        if self.file_path_is_url():
+            return request.urlopen(self.file_path)
+        return open(self.file_path, 'r')
+
+    def force_string(self, value):
+        """
+        Converts a value from bytes to string
+        """
+        if isinstance(value, bytes):
+            return str(value, 'utf-8')
+        else:
+            return value
+
     def run(self):
-        file = open(self.file_path, 'r')
-        data = file.read()
-        ip_list = self.get_ip_list(data)
-        ip_summary = self.get_ip_summary(ip_list)
-        sorted_summary = self.sort_summary(ip_summary)
-        self.print_top_ten(sorted_summary)
-        file.close()
+        try:
+            file = self.get_file()
+        except Exception as e:
+            file = None
+            print('Fatal Error: Unable to open the file.')
+            print(e)
+        else:
+            data = self.force_string(file.read())
+            ip_list = self.get_ip_list(data)
+            ip_summary = self.get_ip_summary(ip_list)
+            sorted_summary = self.sort_summary(ip_summary)
+            self.print_top_ten(sorted_summary)
+        finally:
+            if file:
+                file.close()
 
 
 if __name__ == '__main__':
