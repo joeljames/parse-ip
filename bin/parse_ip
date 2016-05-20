@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [ $1 == "-h" ] || [ $1 == "--help" ]; then
+    echo "Parses and prints the summary of the 10 most frequently found ip addresses."
+    exit
+fi
+
+if [ $1 == "" ]; then
+    echo "Please provide a path to the file which has to be parsed."
+    exit
+fi
+
+FILE_PATH=$1
+
+echo $FILE_PATH
+
+gawk 'match($0, /([0-9]{1,3}\.){3}[0-9]{1,3}/, ary) {print ary[0]}' $FILE_PATH | sort | uniq -c | sort -rn | head -n 10
